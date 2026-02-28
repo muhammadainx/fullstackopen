@@ -7,12 +7,12 @@ const PersonForm = ({ addPerson }) => {
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    const success = addPerson({ name: newName, number: newNumber });
-
-    if (success) {
-      setNewName("");
-      setNewNumber("");
-    }
+    addPerson({ name: newName, number: newNumber }).then((success) => {
+      if (success) {
+        setNewName("");
+        setNewNumber("");
+      }
+    });
   };
 
   return (

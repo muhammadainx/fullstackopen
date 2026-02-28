@@ -1,45 +1,74 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 
 import Filter from "./components/Filter";
 import PersonForm from "./components/PersonForm";
 import Persons from "./components/Persons";
+
+import personService from "./services/persons";
 
 const App = () => {
   const [persons, setPersons] = useState([]);
   const [filter, setFilter] = useState("");
 
   useEffect(() => {
-    axios.get("http://localhost:3001/persons").then((response) => {
-      setPersons(response.data);
+    personService.getAll().then((initialPersons) => {
+      setPersons(initialPersons);
     });
   }, []);
 
-  const addPerson = ({ name, number }) => {
-    const trimmedName = name.trim();
-    const trimmedNumber = number.trim();
+  const updatePerson = (name, number) => {
+    const person = persons.find(
+      (p) => p.name.toLowerCase() === name.toLowerCase(),
+    );
 
-    if (!trimmedName || !trimmedNumber) {
+    const updatedPerson = { ...person, number };
+
+    return personService
+      .update(person.id, updatedPerson)
+      .then((returnedPerson) => {
+        setPersons(
+          persons.map((p) => (p.id === person.id ? returnedPerson : p)),
+        );
+        return true;
+      });
+  };
+
+  const addPerson = ({ name: rawName, number: rawNumber }) => {
+    const name = rawName.trim();
+    const number = rawNumber.trim();
+
+    if (!name || !number) {
       alert(`Please enter both a name and a number`);
-      return;
+      return Promise.resolve(false);
     }
 
     const alreadyExists = persons.some(
-      ({ name }) => name.toLowerCase() === trimmedName.toLowerCase(),
+      (p) => p.name.toLowerCase() === name.toLowerCase(),
     );
 
     if (alreadyExists) {
-      window.alert(`${trimmedName} is already added to phonebook`);
-      return;
+      window.confirm(
+        `${name} is already added to phonebook. Replace the old number with a new one?`,
+      );
+      return updatePerson(name, number);
     }
 
-    const newPerson = {
-      name: trimmedName,
-      number: trimmedNumber,
-    };
+    const newPerson = { name, number };
 
-    setPersons(persons.concat(newPerson));
-    return true;
+    return personService.create(newPerson).then((returnedPerson) => {
+      setPersons((prev) => prev.concat(returnedPerson));
+      return true;
+    });
+  };
+
+  const deletePerson = (id) => {
+    const person = persons.find((p) => p.id === id);
+
+    if (window.confirm(`Delete ${person.name}?`)) {
+      personService.remove(id).then(() => {
+        setPersons(persons.filter((p) => p.id !== id));
+      });
+    }
   };
 
   const personsToShow = filter
@@ -62,7 +91,7 @@ const App = () => {
 
       <h2>Numbers</h2>
 
-      <Persons personsToShow={personsToShow} />
+      <Persons personsToShow={personsToShow} onDelete={deletePerson} />
     </div>
   );
 };
