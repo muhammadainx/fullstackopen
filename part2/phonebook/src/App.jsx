@@ -3,12 +3,19 @@ import { useState, useEffect } from "react";
 import Filter from "./components/Filter";
 import PersonForm from "./components/PersonForm";
 import Persons from "./components/Persons";
+import Notification from "./components/Notification";
 
 import personService from "./services/persons";
 
 const App = () => {
   const [persons, setPersons] = useState([]);
   const [filter, setFilter] = useState("");
+  const [notification, setNotification] = useState(null);
+
+  const notify = (message, status) => {
+    setNotification({ message, status });
+    setTimeout(() => setNotification(null), 5000);
+  };
 
   useEffect(() => {
     personService.getAll().then((initialPersons) => {
@@ -29,6 +36,15 @@ const App = () => {
         setPersons(
           persons.map((p) => (p.id === person.id ? returnedPerson : p)),
         );
+        notify(`Updated ${returnedPerson.name}`, "success");
+        return true;
+      })
+      .catch(() => {
+        setPersons(persons.filter((p) => p.id !== person.id));
+        notify(
+          `${person.name} seems to have already been removed from the phonebook.`,
+          "error",
+        );
         return true;
       });
   };
@@ -38,7 +54,7 @@ const App = () => {
     const number = rawNumber.trim();
 
     if (!name || !number) {
-      alert(`Please enter both a name and a number`);
+      notify(`Please enter both a name and a number`, "error");
       return Promise.resolve(false);
     }
 
@@ -47,16 +63,22 @@ const App = () => {
     );
 
     if (alreadyExists) {
-      window.confirm(
-        `${name} is already added to phonebook. Replace the old number with a new one?`,
-      );
-      return updatePerson(name, number);
+      if (
+        window.confirm(
+          `${name} is already added to phonebook. Replace the old number with a new one?`,
+        )
+      ) {
+        return updatePerson(name, number);
+      }
+
+      return Promise.resolve(false);
     }
 
     const newPerson = { name, number };
 
     return personService.create(newPerson).then((returnedPerson) => {
-      setPersons((prev) => prev.concat(returnedPerson));
+      setPersons(persons.concat(returnedPerson));
+      notify(`${returnedPerson.name} added`, "success");
       return true;
     });
   };
@@ -65,9 +87,19 @@ const App = () => {
     const person = persons.find((p) => p.id === id);
 
     if (window.confirm(`Delete ${person.name}?`)) {
-      personService.remove(id).then(() => {
-        setPersons(persons.filter((p) => p.id !== id));
-      });
+      personService
+        .remove(id)
+        .then(() => {
+          setPersons(persons.filter((p) => p.id !== id));
+          notify(`Deleted ${person.name}`, "success");
+        })
+        .catch(() => {
+          setPersons(persons.filter((p) => p.id !== id));
+          notify(
+            `${person.name} was deleted. The list has been updated`,
+            "error",
+          );
+        });
     }
   };
 
@@ -80,6 +112,8 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+
+      <Notification notification={notification} />
 
       <Filter
         value={filter}
