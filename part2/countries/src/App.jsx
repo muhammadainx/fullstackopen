@@ -1,28 +1,42 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-const countries = [
-  "Pakistan",
-  "Finland",
-  "Australia",
-  "Malaysia",
-  "England",
-  "Qatar",
-];
+import Content from "./components/Content";
+
+import getAllCountries from "./services/countries";
 
 function App() {
-  const [selected, setSelected] = useState(0);
+  const [countries, setCountries] = useState([]);
+  const [query, setQuery] = useState("");
+  const [selectedCountry, setSelectedCountry] = useState(null);
 
-  const handleNextCountry = () => {
-    const indices = countries.map((_, i) => i).filter((i) => i !== selected);
-    const newIndex = indices[Math.floor(Math.random() * indices.length)];
-    setSelected(newIndex);
+  useEffect(() => {
+    getAllCountries().then((allCountries) => setCountries(allCountries));
+  }, []);
+
+  const filteredCountries = query
+    ? countries.filter((c) =>
+        c.name.common.toLowerCase().includes(query.toLowerCase()),
+      )
+    : [];
+
+  const handleQueryChange = (event) => {
+    setQuery(event.target.value);
+    setSelectedCountry(null);
   };
 
   return (
-    <>
-      <div>Country: {countries[selected]}</div>
-      <button onClick={handleNextCountry}>Get New Country</button>
-    </>
+    <div>
+      <div>
+        Find Country: <input value={query} onChange={handleQueryChange} />
+      </div>
+
+      <Content
+        query={query}
+        filteredCountries={filteredCountries}
+        selectedCountry={selectedCountry}
+        handleSelectedCountry={setSelectedCountry}
+      />
+    </div>
   );
 }
 
