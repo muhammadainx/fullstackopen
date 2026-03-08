@@ -14,8 +14,18 @@ mongoose
   });
 
 const personSchema = new mongoose.Schema({
-  name: String,
-  number: String,
+  name: {
+    type: String,
+    minLength: [3, "name should be at least 3 characters long"],
+  },
+  number: {
+    type: String,
+    minLength: [8, "number should be at least 8 characters long"],
+    validate: {
+      validator: (v) => /^\d{2,3}-\d+$/.test(v),
+      message: "number must be of format XX-XXXXXXX or XXX-XXXXXXX",
+    },
+  },
 });
 
 personSchema.set("toJSON", {
