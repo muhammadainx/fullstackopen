@@ -1,0 +1,3 @@
+# Part 3: Programming a server with NodeJS and Express
+
+This section focuses on building a backend for web applications using Node.js and Express. It covers designing RESTful APIs, handling HTTP requests and responses, and implementing CRUD operations for managing resources. It introduces middleware, request validation, structured error handling, and logging. The section also explores integrating a MongoDB database using Mongoose for persistent data storage, managing configuration with environment variables, enforcing code quality with ESLint, and deploying the backend application to production.
