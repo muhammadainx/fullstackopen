@@ -94,3 +94,39 @@ describe("favorite blog", () => {
     assert.deepStrictEqual(result, blogs[2]);
   });
 });
+
+describe("most blogs", () => {
+  test("of empty list is null", () => {
+    const result = listHelper.mostBlogs([]);
+    assert.strictEqual(result, null);
+  });
+
+  test("of a list with only one blog equals author of that blog", () => {
+    const singleBlog = [blogs[0]];
+    const result = listHelper.mostBlogs(singleBlog);
+    assert.deepStrictEqual(result, { author: "Michael Chan", blogs: 1 });
+  });
+
+  test("of a bigger list returns author with most blogs", () => {
+    const result = listHelper.mostBlogs(blogs);
+    assert.deepStrictEqual(result, { author: "Robert C. Martin", blogs: 3 });
+  });
+});
+
+describe("most likes", () => {
+  test("of empty list is null", () => {
+    const result = listHelper.mostLikes([]);
+    assert.strictEqual(result, null);
+  });
+
+  test("of a list with only one blog equals author of that blog", () => {
+    const singleBlog = [blogs[0]];
+    const result = listHelper.mostLikes(singleBlog);
+    assert.deepStrictEqual(result, { author: "Michael Chan", likes: 7 });
+  });
+
+  test("of a bigger list returns author with most likes", () => {
+    const result = listHelper.mostLikes(blogs);
+    assert.deepStrictEqual(result, { author: "Edsger W. Dijkstra", likes: 17 });
+  });
+});
