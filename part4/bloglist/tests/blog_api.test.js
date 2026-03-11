@@ -120,6 +120,80 @@ describe("addition of a new blog", () => {
   });
 });
 
+describe("updating a blog", () => {
+  test("should update a blog and return updated blog when id is valid", async () => {
+    const blogsAtStart = await helper.blogsInDb();
+    const blogToUpdate = { ...blogsAtStart[0] };
+    blogToUpdate.likes++;
+
+    await api
+      .put(`/api/blogs/${blogToUpdate.id}`)
+      .send(blogToUpdate)
+      .expect(200)
+      .expect("Content-Type", /application\/json/);
+
+    const blogsAtEnd = await helper.blogsInDb();
+    const updatedBlog = blogsAtEnd.find((b) => b.id === blogToUpdate.id);
+
+    assert.deepStrictEqual(updatedBlog, blogToUpdate);
+  });
+
+  test("should return 404 if blog does not exist", async () => {
+    const validNonExistingId = await helper.nonExistingId();
+
+    const updatedData = {
+      title: "Won't update",
+      author: "Nobody",
+      url: "https://no-url.com",
+      likes: 0,
+    };
+
+    await api
+      .put(`/api/blogs/${validNonExistingId}`)
+      .send(updatedData)
+      .expect(404);
+  });
+
+  test("should return 400 if id is malformed", async () => {
+    const invalidId = "invalid-id";
+
+    const updatedData = {
+      title: "Won't update",
+      author: "Nobody",
+      url: "https://no-url.com",
+      likes: 0,
+    };
+
+    await api.put(`/api/blogs/${invalidId}`).send(updatedData).expect(400);
+  });
+});
+
+describe("deletion of a blog", () => {
+  test("should return 204 when id is valid", async () => {
+    const blogsAtStart = await helper.blogsInDb();
+    const blogToDelete = blogsAtStart[0];
+
+    await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204);
+
+    const blogsAtEnd = await helper.blogsInDb();
+
+    const ids = blogsAtEnd.map((b) => b.id);
+    assert(!ids.includes(blogToDelete.id));
+
+    assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length - 1);
+  });
+
+  test("should return 400 if id is malformed", async () => {
+    const invalidId = "invalid-id";
+
+    await api.delete(`/api/blogs/${invalidId}`).expect(400);
+
+    const blogsAtEnd = await helper.blogsInDb();
+
+    assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length);
+  });
+});
+
 after(async () => {
   await mongoose.connection.close();
 });
