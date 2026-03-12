@@ -8,12 +8,31 @@ const app = require("../app");
 const helper = require("./test_helper");
 
 const Blog = require("../models/blog");
+const User = require("../models/user");
 
 const api = supertest(app);
 
+let headers;
+
 beforeEach(async () => {
   await Blog.deleteMany({});
-  await Blog.insertMany(helper.initialBlogs);
+  await User.deleteMany({});
+
+  const newUser = {
+    username: "Jacob",
+    name: "Jacob Smith",
+    password: "jacobpwd",
+  };
+
+  await api.post("/api/users").send(newUser);
+  const result = await api.post("/api/login").send(newUser);
+  headers = { Authorization: `Bearer ${result.body.token}` };
+
+  await Promise.all(
+    helper.initialBlogs.map((blog) =>
+      api.post("/api/blogs").set(headers).send(blog),
+    ),
+  );
 });
 
 describe("retrieval of all blogs", () => {
@@ -49,6 +68,7 @@ describe("addition of a new blog", () => {
 
     await api
       .post("/api/blogs")
+      .set(headers)
       .send(newBlog)
       .expect(201)
       .expect("Content-Type", /application\/json/);
@@ -70,6 +90,7 @@ describe("addition of a new blog", () => {
 
     const response = await api
       .post("/api/blogs")
+      .set(headers)
       .send(newBlog)
       .expect(201)
       .expect("Content-Type", /application\/json/);
@@ -84,7 +105,7 @@ describe("addition of a new blog", () => {
       likes: 3,
     };
 
-    await api.post("/api/blogs").send(newBlog).expect(400);
+    await api.post("/api/blogs").set(headers).send(newBlog).expect(400);
 
     const blogsAtEnd = await helper.blogsInDb();
 
@@ -98,7 +119,7 @@ describe("addition of a new blog", () => {
       likes: 3,
     };
 
-    await api.post("/api/blogs").send(newBlog).expect(400);
+    await api.post("/api/blogs").set(headers).send(newBlog).expect(400);
 
     const blogsAtEnd = await helper.blogsInDb();
 
@@ -112,7 +133,22 @@ describe("addition of a new blog", () => {
       likes: 3,
     };
 
-    await api.post("/api/blogs").send(newBlog).expect(400);
+    await api.post("/api/blogs").set(headers).send(newBlog).expect(400);
+
+    const blogsAtEnd = await helper.blogsInDb();
+
+    assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length);
+  });
+
+  test("should return 401 if token is not provided", async () => {
+    const newBlog = {
+      title: "React patterns",
+      author: "Michael Chan",
+      url: "https://reactpatterns.com/",
+      likes: 3,
+    };
+
+    await api.post("/api/blogs").send(newBlog).expect(401);
 
     const blogsAtEnd = await helper.blogsInDb();
 
@@ -173,7 +209,7 @@ describe("deletion of a blog", () => {
     const blogsAtStart = await helper.blogsInDb();
     const blogToDelete = blogsAtStart[0];
 
-    await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204);
+    await api.delete(`/api/blogs/${blogToDelete.id}`).set(headers).expect(204);
 
     const blogsAtEnd = await helper.blogsInDb();
 
@@ -186,7 +222,31 @@ describe("deletion of a blog", () => {
   test("should return 400 if id is malformed", async () => {
     const invalidId = "invalid-id";
 
-    await api.delete(`/api/blogs/${invalidId}`).expect(400);
+    await api.delete(`/api/blogs/${invalidId}`).set(headers).expect(400);
+
+    const blogsAtEnd = await helper.blogsInDb();
+
+    assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length);
+  });
+
+  test("should return 403 if user tries to delete a blog that does not belong to them", async () => {
+    const blogsAtStart = await helper.blogsInDb();
+    const blogToDelete = blogsAtStart[0];
+
+    const otherUser = {
+      username: "james",
+      name: "James Smith",
+      password: "jamespwd",
+    };
+
+    await api.post("/api/users").send(otherUser);
+    const result = await api.post("/api/login").send(otherUser);
+    const otherHeaders = { Authorization: `Bearer ${result.body.token}` };
+
+    await api
+      .delete(`/api/blogs/${blogToDelete.id}`)
+      .set(otherHeaders)
+      .expect(403);
 
     const blogsAtEnd = await helper.blogsInDb();
 
