@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import Blog from "./components/Blog";
 import LoginForm from "./components/LoginForm";
 import BlogForm from "./components/BlogForm";
 import Notification from "./components/Notification";
+import Togglable from "./components/Togglable";
 
 import blogService from "./services/blogs";
 import loginService from "./services/login";
@@ -12,6 +13,8 @@ const App = () => {
   const [user, setUser] = useState(null);
   const [blogs, setBlogs] = useState([]);
   const [notification, setNotification] = useState(null);
+
+  const blogFormRef = useRef();
 
   useEffect(() => {
     blogService.getAll().then((blogs) => setBlogs(blogs));
@@ -25,6 +28,8 @@ const App = () => {
       setUser(user);
     }
   }, []);
+
+  const sortedBlogs = [...blogs].sort((a, b) => b.likes - a.likes);
 
   const notify = (message, status) => {
     setNotification({ message, status });
@@ -50,6 +55,7 @@ const App = () => {
 
   const createBlog = async (blogObject) => {
     try {
+      blogFormRef.current.toggleVisibility();
       const returnedBlog = await blogService.create(blogObject);
       setBlogs(blogs.concat(returnedBlog));
       notify(
@@ -57,11 +63,40 @@ const App = () => {
         "success",
       );
     } catch (error) {
-      const backendResponse = error.response?.data?.error;
-      notify(
-        backendResponse ? `Error: ${backendResponse}` : "Something went wrong",
-        "error",
-      );
+      const errorMessage =
+        error.response?.data?.error || "Something went wrong";
+      notify(errorMessage, "error");
+    }
+  };
+
+  const updateLikes = async (blog) => {
+    const updatedBlog = {
+      ...blog,
+      likes: blog.likes + 1,
+      user: blog.user?.id,
+    };
+
+    try {
+      const returnedBlog = await blogService.update(blog.id, updatedBlog);
+      setBlogs(blogs.map((b) => (b.id !== blog.id ? b : returnedBlog)));
+    } catch {
+      notify("Failed to update like count", "error");
+    }
+  };
+
+  const removeBlog = async (blog) => {
+    const ok = window.confirm(`Remove blog "${blog.title}" by ${blog.author}?`);
+
+    if (ok) {
+      try {
+        await blogService.remove(blog.id);
+        setBlogs(blogs.filter((b) => b.id !== blog.id));
+        notify("Blog deleted successfully", "success");
+      } catch (error) {
+        const errorMessage =
+          error.response?.data?.error || "Something went wrong";
+        notify(errorMessage, "error");
+      }
     }
   };
 
@@ -84,10 +119,18 @@ const App = () => {
             <button onClick={handleLogout}>logout</button>
           </p>
 
-          <BlogForm createBlog={createBlog} />
+          <Togglable buttonLabel="create new blog" ref={blogFormRef}>
+            <BlogForm createBlog={createBlog} />
+          </Togglable>
 
-          {blogs.map((blog) => (
-            <Blog key={blog.id} blog={blog} />
+          {sortedBlogs.map((blog) => (
+            <Blog
+              key={blog.id}
+              blog={blog}
+              user={user}
+              updateLikes={updateLikes}
+              removeBlog={removeBlog}
+            />
           ))}
         </>
       )}
