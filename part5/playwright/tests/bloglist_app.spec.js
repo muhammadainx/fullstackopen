@@ -112,7 +112,7 @@ describe("Blog app", () => {
 
         await expect(
           page.getByRole("button", { name: "remove" }),
-        ).not.toBeAttached();
+        ).not.toBeVisible();
       });
     });
 
