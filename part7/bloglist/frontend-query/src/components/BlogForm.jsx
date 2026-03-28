@@ -1,22 +1,33 @@
 import { useState } from 'react';
 
-const BlogForm = ({ createBlog }) => {
+import { useBlogs } from '../hooks/useBlogs';
+
+const BlogForm = ({ onBlogCreated }) => {
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
   const [url, setUrl] = useState('');
 
-  const addBlog = (event) => {
+  const { createBlog } = useBlogs();
+
+  const handleSubmit = (event) => {
     event.preventDefault();
 
-    createBlog({ title, author, url });
+    createBlog(
+      { title, author, url },
+      {
+        onSuccess: () => {
+          setTitle('');
+          setAuthor('');
+          setUrl('');
 
-    setTitle('');
-    setAuthor('');
-    setUrl('');
+          onBlogCreated?.();
+        },
+      },
+    );
   };
 
   return (
-    <form onSubmit={addBlog}>
+    <form onSubmit={handleSubmit}>
       <div>
         <label>
           Title:{' '}

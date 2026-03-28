@@ -1,19 +1,36 @@
 import { useState } from 'react';
 
-const LoginForm = ({ handleLogin }) => {
+import { useUser } from '../hooks/useUser';
+import { useNotification } from '../hooks/useNotification';
+
+import loginService from '../services/login';
+
+const LoginForm = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
-  const login = (event) => {
+  const { loginUser } = useUser();
+  const { setNotification } = useNotification();
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
-    handleLogin({ username, password });
-    setUsername('');
-    setPassword('');
+    try {
+      const user = await loginService.login({ username, password });
+      loginUser(user);
+
+      setUsername('');
+      setPassword('');
+    } catch {
+      setNotification({
+        message: 'invalid username or password',
+        status: 'error',
+      });
+    }
   };
 
   return (
-    <form onSubmit={login}>
+    <form onSubmit={handleSubmit}>
       <div>
         <label>
           username
