@@ -1,86 +1,67 @@
-import { useRef } from 'react';
+import { Route, Routes } from 'react-router';
 
-import Blog from './components/Blog';
-import BlogForm from './components/BlogForm';
-import LoginForm from './components/LoginForm';
+import Blogs from './pages/Blogs';
+import Blog from './pages/Blog';
+import Users from './pages/Users';
+import User from './pages/User';
+import Login from './pages/Login';
+
+import Navbar from './components/Navbar';
 import Notification from './components/Notification';
-import Togglable from './components/Togglable';
 
 import { useUser } from './hooks/useUser';
-import { useBlogs } from './hooks/useBlogs';
+import ProtectedRoute from './components/ProtectedRoute';
 
 const App = () => {
-  const { user, logoutUser } = useUser();
-  const { blogs, isLoading, isError, likeBlog, deleteBlog } = useBlogs();
-
-  const blogFormRef = useRef();
-
-  if (isLoading) {
-    return <div>loading data...</div>;
-  }
-
-  if (isError) {
-    return <div>blog service not available due to problems in server</div>;
-  }
-
-  const handleBlogCreated = () => {
-    blogFormRef.current.toggleVisibility();
-  };
-
-  const updateLikes = (blog) => {
-    const updatedBlog = {
-      ...blog,
-      likes: blog.likes + 1,
-      user: blog.user?.id,
-    };
-
-    likeBlog({ id: blog.id, updatedBlog });
-  };
-
-  const removeBlog = (blog) => {
-    const ok = window.confirm(`Remove blog "${blog.title}" by ${blog.author}?`);
-
-    if (ok) {
-      deleteBlog(blog.id);
-    }
-  };
-
-  const sortedBlogs = [...blogs].sort((a, b) => b.likes - a.likes);
+  const { user } = useUser();
 
   return (
     <div>
       <Notification />
 
-      {!user && (
-        <>
-          <h2>Log in to application</h2>
-          <LoginForm />
-        </>
-      )}
-
       {user && (
         <>
-          <h2>blogs</h2>
-          <p>
-            {user.username} logged in
-            <button onClick={logoutUser}>logout</button>
-          </p>
-
-          <Togglable buttonLabel="create new blog" ref={blogFormRef}>
-            <BlogForm onBlogCreated={handleBlogCreated} />
-          </Togglable>
-
-          {sortedBlogs.map((blog) => (
-            <Blog
-              key={blog.id}
-              blog={blog}
-              user={user}
-              updateLikes={updateLikes}
-              removeBlog={removeBlog}
-            />
-          ))}
+          <Navbar />
+          <h2>Blog App</h2>
         </>
       )}
+
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Blogs />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/blogs/:id"
+          element={
+            <ProtectedRoute>
+              <Blog />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/users"
+          element={
+            <ProtectedRoute>
+              <Users />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/users/:id"
+          element={
+            <ProtectedRoute>
+              <User />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/*" element={<h3>404 Page Not Found</h3>} />
+      </Routes>
     </div>
   );
 };
