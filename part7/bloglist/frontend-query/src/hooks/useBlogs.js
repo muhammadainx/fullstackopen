@@ -68,6 +68,21 @@ export const useBlogs = () => {
     },
   });
 
+  const addComment = useMutation({
+    mutationFn: ({ id, comment }) => blogService.addComment(id, comment),
+    onSuccess: (updatedBlog) => {
+      queryClient.setQueryData(['blogs'], (old = []) =>
+        old.map((b) => (b.id === updatedBlog.id ? updatedBlog : b)),
+      );
+    },
+    onError: () => {
+      setNotification({
+        message: 'Failed to add comment',
+        status: 'error',
+      });
+    },
+  });
+
   return {
     blogs: blogsQuery.data ?? [],
     isLoading: blogsQuery.isLoading,
@@ -75,5 +90,6 @@ export const useBlogs = () => {
     createBlog: createBlog.mutate,
     likeBlog: likeBlog.mutate,
     deleteBlog: deleteBlog.mutate,
+    addComment: addComment.mutate,
   };
 };

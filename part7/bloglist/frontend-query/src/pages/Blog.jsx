@@ -1,62 +1,27 @@
-import { useNavigate, useParams } from 'react-router';
+import { useParams } from 'react-router';
 
-import { useUser } from '../hooks/useUser';
-import { useBlogs } from '../hooks/useBlogs';
+import BlogCard from '../components/BlogCard';
+import BlogCommentForm from '../components/BlogCommentForm';
+import BlogCommentList from '../components/BlogCommentList';
+
 import { useBlogById } from '../hooks/useBlogById';
 
 const Blog = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
 
-  const { user } = useUser();
   const { blog } = useBlogById(id);
-  const { likeBlog, deleteBlog } = useBlogs();
-
-  const updateLikes = () => {
-    const updatedBlog = {
-      ...blog,
-      likes: blog.likes + 1,
-      user: blog.user?.id,
-    };
-
-    likeBlog({ id: blog.id, updatedBlog });
-  };
-
-  const removeBlog = () => {
-    const ok = window.confirm(`Remove blog "${blog.title}" by ${blog.author}?`);
-
-    if (ok) {
-      deleteBlog(blog.id);
-      navigate('/');
-    }
-  };
 
   if (!blog) {
     return <div>blog not found</div>;
   }
 
-  const showDeleteButton = blog?.user?.username === user.username;
-
   return (
-    <div>
-      <h2>{blog.title}</h2>
-
-      <div>
-        <a href={blog.url}>{blog.url}</a>
-      </div>
-
-      <div>
-        {blog.likes} likes <button onClick={updateLikes}>like</button>
-      </div>
-
-      <div>added by {blog.user?.username || 'anonymous'}</div>
-
-      {showDeleteButton && (
-        <div>
-          <button onClick={removeBlog}>remove</button>
-        </div>
-      )}
-    </div>
+    <main>
+      <BlogCard blog={blog} />
+      <h3>comments</h3>
+      <BlogCommentForm blogId={blog.id} />
+      <BlogCommentList comments={blog.comments} />
+    </main>
   );
 };
 
