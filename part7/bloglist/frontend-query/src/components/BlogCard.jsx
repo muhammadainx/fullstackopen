@@ -1,4 +1,13 @@
 import { useNavigate } from 'react-router';
+import {
+  Box,
+  Button,
+  Card,
+  CardActions,
+  CardContent,
+  Link,
+  Typography,
+} from '@mui/material';
 
 import { useBlogs } from '../hooks/useBlogs';
 import { useUser } from '../hooks/useUser';
@@ -31,25 +40,38 @@ const BlogCard = ({ blog }) => {
   const showDeleteButton = blog?.user?.username === user.username;
 
   return (
-    <article>
-      <h2>{blog.title}</h2>
+    <Card sx={{ mb: 2, maxWidth: 600 }}>
+      <CardContent>
+        <Typography variant="h6" gutterBottom>
+          {blog.title}
+        </Typography>
 
-      <div>
-        <a href={blog.url}>{blog.url}</a>
-      </div>
+        <Typography variant="body2" sx={{ mb: 1 }}>
+          <Link href={blog.url} target="_blank" rel="noopener noreferrer">
+            {blog.url}
+          </Link>
+        </Typography>
 
-      <div>
-        {blog.likes} likes <button onClick={updateLikes}>like</button>
-      </div>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+          <Typography>{blog.likes} likes</Typography>
+          <Button size="small" variant="contained" onClick={updateLikes}>
+            like
+          </Button>
+        </Box>
 
-      <div>added by {blog.user?.username || 'anonymous'}</div>
+        <Typography variant="body2" color="text.secondary">
+          added by {blog.user?.username || 'anonymous'}
+        </Typography>
+      </CardContent>
 
       {showDeleteButton && (
-        <div>
-          <button onClick={removeBlog}>remove</button>
-        </div>
+        <CardActions>
+          <Button variant="outlined" color="error" onClick={removeBlog}>
+            remove
+          </Button>
+        </CardActions>
       )}
-    </article>
+    </Card>
   );
 };
 

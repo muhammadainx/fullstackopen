@@ -1,4 +1,5 @@
 import { useNotification } from '../hooks/useNotification';
+import { Alert } from '@mui/material';
 
 const Notification = () => {
   const { notification } = useNotification();
@@ -6,8 +7,10 @@ const Notification = () => {
   if (!notification) return null;
 
   return (
-    <div className={`notification ${notification.status}`}>
-      {notification.message}
+    <div>
+      {notification.message && (
+        <Alert severity={notification.status}>{notification.message}</Alert>
+      )}
     </div>
   );
 };

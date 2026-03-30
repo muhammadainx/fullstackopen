@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Button, Stack, TextField } from '@mui/material';
 
 import { useBlogs } from '../hooks/useBlogs';
 
@@ -28,37 +29,32 @@ const BlogForm = ({ onBlogCreated }) => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <div>
-        <label>
-          Title:{' '}
-          <input
-            type="text"
-            value={title}
-            onChange={({ target }) => setTitle(target.value)}
-          />
-        </label>
-      </div>
-      <div>
-        <label>
-          Author:{' '}
-          <input
-            type="text"
-            value={author}
-            onChange={({ target }) => setAuthor(target.value)}
-          />
-        </label>
-      </div>
-      <div>
-        <label>
-          Url:{' '}
-          <input
-            type="text"
-            value={url}
-            onChange={({ target }) => setUrl(target.value)}
-          />
-        </label>
-      </div>
-      <button type="submit">create</button>
+      <Stack spacing={2} sx={{ width: 300 }}>
+        <TextField
+          label="Title"
+          size="small"
+          type="text"
+          value={title}
+          onChange={({ target }) => setTitle(target.value)}
+        />
+        <TextField
+          label="Author"
+          size="small"
+          type="text"
+          value={author}
+          onChange={({ target }) => setAuthor(target.value)}
+        />
+        <TextField
+          label="Url"
+          size="small"
+          type="text"
+          value={url}
+          onChange={({ target }) => setUrl(target.value)}
+        />
+        <Button variant="contained" color="primary" type="submit">
+          create
+        </Button>
+      </Stack>
     </form>
   );
 };

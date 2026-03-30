@@ -1,4 +1,5 @@
 import { Route, Routes } from 'react-router';
+import Container from '@mui/material/Container';
 
 import Blogs from './pages/Blogs';
 import Blog from './pages/Blog';
@@ -8,23 +9,18 @@ import Login from './pages/Login';
 
 import Navbar from './components/Navbar';
 import Notification from './components/Notification';
+import ProtectedRoute from './components/ProtectedRoute';
 
 import { useUser } from './hooks/useUser';
-import ProtectedRoute from './components/ProtectedRoute';
 
 const App = () => {
   const { user } = useUser();
 
   return (
-    <div>
+    <Container>
       <Notification />
 
-      {user && (
-        <>
-          <Navbar />
-          <h2>Blog App</h2>
-        </>
-      )}
+      {user && <Navbar />}
 
       <Routes>
         <Route path="/login" element={<Login />} />
@@ -62,7 +58,7 @@ const App = () => {
         />
         <Route path="/*" element={<h3>404 Page Not Found</h3>} />
       </Routes>
-    </div>
+    </Container>
   );
 };
 

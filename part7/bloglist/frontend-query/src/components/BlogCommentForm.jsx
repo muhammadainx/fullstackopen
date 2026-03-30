@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Box, Button, TextField } from '@mui/material';
 
 import { useBlogs } from '../hooks/useBlogs';
 
@@ -17,14 +18,20 @@ const BlogCommentForm = ({ blogId }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input
+    <Box
+      component="form"
+      onSubmit={handleSubmit}
+      sx={{ display: 'flex', gap: 1, alignItems: 'center' }}
+    >
+      <TextField
+        size="small"
+        sx={{ flexGrow: 1 }}
         type="text"
         value={comment}
         onChange={({ target }) => setComment(target.value)}
       />
-      <button>add comment</button>
-    </form>
+      <Button variant="contained">add comment</Button>
+    </Box>
   );
 };
 
